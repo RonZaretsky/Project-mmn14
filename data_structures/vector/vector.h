@@ -17,16 +17,16 @@ struct vector;
 typedef struct vector * Vector;
 
 /**
- * @brief New Vector.
+ * @brief Creates a new vector.
  * 
- * @param ctor Constructor Function
- * @param dtor Distructor Function
+ * @param ctor The constructor of the item
+ * @param dtor The destructor of the item
  * @return Vector 
  */
 Vector new_vector(void * (*ctor)(const void *copy),  void (*dtor)(void *item));
 
 /**
- * @brief Return the address of the first index.
+ * @brief Returns the address of the first index.
  * 
  * @param v Your vector
  * @return void* const* 
@@ -42,7 +42,7 @@ void * const * vector_begin(const Vector v);
 void * const * vector_end(const Vector v);
 
 /**
- * @brief Returns the items count.
+ * @brief Returns the item count in the vector.
  * 
  * @param v Your vector
  * @return size_t 

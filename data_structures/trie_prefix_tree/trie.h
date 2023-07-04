@@ -14,25 +14,28 @@
 
 typedef struct trie * Trie;
 
+
+
 /**
- * @brief constructor
+ * @brief Creates a new trie struct.
  * 
  * @return Trie 
  */
 Trie trie();
 
+
 /**
- * @brief Insertion of string to a trie struct.
+ * @brief Inserts a string to the trie.
  * 
  * @param trie Trie struct
  * @param string The string you want to insert
- * @param end_of_str_context Context for the end of the string
+ * @param end_of_str_context A pointer to the end of the string
  * @return const char* 
  */
 const char *trie_insert(Trie trie, const char *string, void *end_of_str_context);
 
 /**
- * @brief Check is a string exists.
+ * @brief Checks if a string exists in the trie.
  * 
  * @param trie Trie struct
  * @param string The string you want to check
@@ -41,7 +44,7 @@ const char *trie_insert(Trie trie, const char *string, void *end_of_str_context)
 void *trie_exists(Trie trie, const char *string);
 
 /**
- * @brief Deletes string from the trie.
+ * @brief Deletes a string from the trie.
  * 
  * @param trie Trie struct
  * @param string The string you want to delete
@@ -49,9 +52,9 @@ void *trie_exists(Trie trie, const char *string);
 void trie_delete(Trie trie, const char *string);
 
 /**
- * @brief Destroys the trie and freeing the memory.
+ * @brief Destroys the trie struct.
  * 
- * @param trie 
+ * @param trie Trie struct
  */
 void trie_destroy(Trie *trie);
 
