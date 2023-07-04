@@ -11,5 +11,7 @@
 #define MAX_LINE_LENGTH 81
 #define DIRECTIVES_COUNT 4
 #define INSTRUCTIONS_COUNT 16
+#define FAILURE 0
+#define SUCCESS 1
 
 #endif /* __DEFINES_H__ */

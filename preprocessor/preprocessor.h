@@ -17,7 +17,7 @@
  * @param file_name The name of the file to preprocess.
  * @return void* A pointer to the preprocessed file.
  */
-void * preprocesses_file(const char * file_name);
+int preprocesses_file(const char * file_name);
 
 
 
