@@ -1,7 +1,9 @@
-#include "assembler.h"
-#include "defines.h"
+#include "assembler/assembler.h"
+#include "global/defines.h"
 
-int main(int argc, char const *argv[])
+#define DEBUG
+
+int main(int argc, char  **argv)
 {
     if(assemble(argc, argv) == FAILURE){
         return 1;
