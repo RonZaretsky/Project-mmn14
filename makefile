@@ -12,6 +12,10 @@ ifndef DEBUG
 CFLAGS += -g
 endif
 
+ifndef CHECK_MEMORY_LEAKS
+CFLAGS += -fsanitize=address
+endif
+
 .PHONY: clean build_env all
 
 all: build_env $(PROG_NAME)

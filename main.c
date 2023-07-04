@@ -2,6 +2,7 @@
 #include "global/defines.h"
 
 #define DEBUG
+#define CHECK_MEMORY_LEAKS
 
 int main(int argc, char  **argv)
 {

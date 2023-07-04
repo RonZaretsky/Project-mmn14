@@ -23,7 +23,7 @@ int preprocesses_file(const char *file_name){
     strcat(full_path, file_name);
     strcat(full_path, AS_FILE_EXTENSION);
     if((as_file_ptr = fopen(full_path, "r")) == NULL){
-        fprintf(stderr, "Error: could not open file '%s'\n", full_path);
+        fprintf(stderr, "%sError%s: could not open file '%s'\n", BRED,reset, full_path);
         return FAILURE;
     }
 
@@ -37,7 +37,7 @@ int preprocesses_file(const char *file_name){
     am_file_ptr = fopen(full_path, "a");
     if (am_file_ptr == NULL)
     {
-        fprintf(stderr, "Error: could not open file '%s'\n", full_path);
+        fprintf(stderr, "%sError%s: could not open file '%s'\n", BRED,reset, full_path);
         fclose(as_file_ptr);
         return FAILURE;
     }
