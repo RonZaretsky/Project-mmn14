@@ -27,7 +27,7 @@ Vector new_vector(void * (*ctor)(const void *copy),  void (*dtor)(void *item)){
     return new;
 }
 
-size_t vector_get_item_count(const Vector v){
+size_t vector_get_items_count(const Vector v){
     return v->items_count;
 }
 
@@ -48,41 +48,43 @@ void vector_destroy(Vector * v){
 
 
 
-void * vector_insert(Vector v,const void *copy_item ){
-    size_t iterator;
-    void **temp;
-    if(v->capacity == v->items_count){
-        v->capacity *= 2;
-        temp = realloc(v->items, v->capacity * sizeof(void*));
-        if(temp != NULL){
-            v->items = temp;
-        }else{
+void * vector_insert(Vector v,const void * copy_item) {
+    size_t it;
+    void ** temp;
+    if(v->items_count == v->capacity) {
+        v->capacity *=2;
+        temp = realloc(v->items,v->capacity * sizeof(void *));
+        if(temp == NULL) {
             v->capacity /= 2;
-            return NULL; 
+            return NULL;
         }
+        v->items = temp;
         v->items[v->items_count] = v->ctor(copy_item);
-        if(v->items[v->items_count] == NULL){
+        if(v->items[v->items_count] ==NULL) {
             return NULL;
         }
         v->items_count++;
-        memset(&v->items[v->items_count],0, v->capacity - v->items_count + 1);
-    }else{
-        for(iterator = 0; iterator < v->capacity ; iterator++){
-            if(v->items[iterator] == NULL){
-                v->items[iterator] = v->ctor(copy_item);
-                if(v->items[iterator]!= NULL){
+        /*
+        memset(&v->items[v->items_count],0,(v->capacity - v->items_count) + 1);
+        */
+        for(it = v->items_count; it < v->capacity; it++) {
+            v->items[it] = NULL;
+        }
+    }else {
+        for(it = 0;it<v->capacity;it++) {
+            if(v->items[it] == NULL) {
+                v->items[it] = v->ctor(copy_item);
+                if(v->items[it] != NULL) {
                     v->items_count++;
-                    break;
+                    break;    
                 }
                 return NULL;
             }
         }
     }
-
-    
-    return v->items[iterator];
-
+    return v->items[v->items_count-1];
 }
+
 
 
 void * const * vector_begin(const Vector v){

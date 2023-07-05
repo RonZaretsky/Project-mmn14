@@ -65,5 +65,5 @@ void * vector_insert(Vector v,  const void *copy_item );
  */
 void vector_destroy(Vector * v);
 
-#define VECTOR_FOR_EACH(begin,end,v) for(begin = vector_begin(nums),end = vector_end(nums);begin <= end; begin++)
+#define VECTOR_FOR_EACH(begin,end,v) for(begin = vector_begin(v),end = vector_end(v);begin <= end; begin++)
 #endif

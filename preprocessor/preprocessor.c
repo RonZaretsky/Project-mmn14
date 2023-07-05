@@ -1,59 +1,47 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 #include "../data_structures/vector/vector.h"
 #include "../data_structures/trie/trie.h"
 #include "../global/defines.h"
+#include "../global/utils.c"
+#include "../global/dir_ins_names.h"
 #include "preprocessor.h"
 
 static void * macro_ctor(void const * macro);
 static void macro_dtor(void * macro);
-static void close(FILE **as_file_ptrr, FILE **am_file_ptrr, Trie *macros, Vector *macros_content);
+static void * am_line_ctor(void const * line);
+static void am_line_dtor(void * line);
+static void load_content_to_am_file(FILE *am_file_ptr, Vector *file_content);
+static int open_file(FILE **file_ptr, const char *path, const char *file_name, const char *extension, const char * mode);
 
+typedef struct file_line{
+    char line_content[MAX_LINE_LENGTH];
+} FileLine;
 
 int preprocesses_file(const char *file_name){
     Trie macros;
     FILE *as_file_ptr;
     FILE *am_file_ptr;
     Vector macros_content;
-    char full_path[MAX_PATH_LENGTH];
+    Vector file_content;
 
     /* open as file for reasing */
-    strcpy(full_path, AS_FILES_PATH);
-    strcat(full_path, file_name);
-    strcat(full_path, AS_FILE_EXTENSION);
-    if((as_file_ptr = fopen(full_path, "r")) == NULL){
-        fprintf(stderr, "%sError%s: could not open file '%s'\n", BRED,reset, full_path);
+    if(open_file(&as_file_ptr, AS_FILES_PATH, file_name, AS_FILE_EXTENSION, "r") == FAILURE){
         return FAILURE;
     }
 
-    /* Reset the full_path string */ 
-    memset(full_path, 0, sizeof(full_path));
 
-    /* open am file for appending */
-    strcpy(full_path, AM_FILES_PATH);
-    strcat(full_path, file_name);
-    strcat(full_path, AM_FILE_EXTENSION);
-    am_file_ptr = fopen(full_path, "a");
-    if (am_file_ptr == NULL)
-    {
-        fprintf(stderr, "%sError%s: could not open file '%s'\n", BRED,reset, full_path);
+    
+
+
+    /* open am file for writing */
+    if(open_file(&am_file_ptr, AM_FILES_PATH, file_name, AM_FILE_EXTENSION, "w") == FAILURE){
         fclose(as_file_ptr);
         return FAILURE;
     }
     
-
-    /* decalre Trie and Vector */
-    macros = trie();
-    macros_content = new_vector(macro_ctor, macro_dtor);
-    if(macros_content == NULL){
-        fprintf(stderr, "Error: could not allocate memory for macros_content\n");
-        close(&as_file_ptr, &am_file_ptr, &macros, &macros_content);
-        return FAILURE;
-    }
-    
-    
-    close(&as_file_ptr, &am_file_ptr, &macros, &macros_content);
     return SUCCESS;
 }
 
@@ -72,10 +60,36 @@ static void macro_dtor(void * macro){
     free(macro);
 }
 
-static void close(FILE **as_file_ptrr, FILE **am_file_ptrr, Trie *macros, Vector *macros_content)
-{
-    trie_destroy(macros);
-    vector_destroy(macros_content);
-    if(*as_file_ptrr) fclose(*as_file_ptrr);
-    if(*am_file_ptrr) fclose(*am_file_ptrr);
+static void * am_line_ctor(void const * copy){
+    FileLine * file_line = malloc(sizeof(FileLine));
+    if(file_line == NULL){
+        fprintf(stderr, "Error: could not allocate memory for file_line\n");
+        return NULL;
+    }
+    return memcpy(file_line, copy, sizeof(FileLine));
+}
+
+static void am_line_dtor(void * line){
+    free(line);
+}
+
+static void load_content_to_am_file(FILE *am_file_ptr, Vector *file_content){
+    void * const * begin;
+    void * const * end;
+    VECTOR_FOR_EACH(begin,end, *file_content){
+        fprintf(am_file_ptr, "%s", ((FileLine *)*begin)->line_content);
+    }
+}
+
+static int open_file(FILE **file_ptr, const char *path, const char *file_name, const char *extension, const char *mode){
+    char full_path[MAX_PATH_LENGTH] = {0};
+    strcpy(full_path, path);
+    strcat(full_path, file_name);
+    strcat(full_path, extension);
+    *file_ptr = fopen(full_path, mode);
+    if(*file_ptr == NULL){
+        fprintf(stderr, "%sError%s: could not open file '%s'\n", BRED,reset, full_path);
+        return(FAILURE);
+    }
+    return SUCCESS;
 }
