@@ -3,7 +3,7 @@ CFLAGS 		= -ansi -pedantic -Wall
 LDFLAGS		= -lm
 PROG_NAME 	= mmn14
 ZIP_NAME	= $(PROG_NAME).zip
-ARGS		= test1
+ARGS		= test2
 
 BUILD_DIR 	= build
 OBJ_DIR		= $(BUILD_DIR)/obj
@@ -11,11 +11,11 @@ BIN_DIR		= $(BUILD_DIR)/bin
 
 
 
-ifdef DEBUG
+ifdef debug
 CFLAGS += -g
 endif
 
-ifdef CHECK_MEMORY_LEAKS
+ifdef cml
 CFLAGS += -fsanitize=address
 endif
 
@@ -30,7 +30,7 @@ main.o: main.c assembler/assembler.h global/defines.h
 preprocessor.o: preprocessor/preprocessor.c \
  preprocessor/../data_structures/vector/vector.h \
  preprocessor/../data_structures/trie/trie.h \
- preprocessor/../global/defines.h preprocessor/../global/utils.c \
+ preprocessor/../global/defines.h\
  preprocessor/../global/defines.h preprocessor/../global/dir_ins_names.h \
  preprocessor/preprocessor.h
 assembler.o: assembler/assembler.c assembler/assembler.h \

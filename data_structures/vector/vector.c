@@ -32,16 +32,19 @@ size_t vector_get_items_count(const Vector v){
 }
 
 
-void vector_destroy(Vector * v){
+void vector_destroy(Vector * v) {
     size_t it;
-    if((*v)->dtor != NULL){
-        for(it = 0; it < (*v)->capacity; it++){
-            (*v)->dtor((*v)->items[it]);
+    if(*v != NULL) {
+        if((*v)->dtor != NULL) {
+            for(it = 0;it < (*v)->capacity; it++) {
+                if((*v)->items[it] != NULL)
+                    (*v)->dtor((*v)->items[it]);
+            }
         }
+        free((*v)->items);
+        free(*v);
+        *v = NULL;
     }
-    free((*v)->items);
-    free(*v);
-    *v = NULL;
 }
 
 

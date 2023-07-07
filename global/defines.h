@@ -22,6 +22,7 @@
 #define ENT_FILES_PATH "assets/ent_files/"
 #define EXT_FILES_PATH "assets/ext_files/"
 #define MCRO "mcro"
+#define ENDMCRO "endmcro"
 
 
 #define BLK "\033[0;30m"
