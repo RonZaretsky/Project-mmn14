@@ -30,9 +30,8 @@ main.o: main.c assembler/assembler.h global/defines.h
 preprocessor.o: preprocessor/preprocessor.c \
  preprocessor/../data_structures/vector/vector.h \
  preprocessor/../data_structures/trie/trie.h \
- preprocessor/../global/defines.h\
  preprocessor/../global/defines.h preprocessor/../global/dir_ins_names.h \
- preprocessor/preprocessor.h
+ preprocessor/../global/defines.h preprocessor/preprocessor.h
 assembler.o: assembler/assembler.c assembler/assembler.h \
  assembler/../preprocessor/preprocessor.h assembler/../global/defines.h
 trie.o: data_structures/trie/trie.c data_structures/trie/trie.h
@@ -56,5 +55,6 @@ zip: clean
 run:
 	build/bin/mmn14 $(ARGS)
 	
+
 
 

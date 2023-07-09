@@ -144,7 +144,7 @@ static void load_am_file(FILE ** file, Vector *file_content){
 }
 
 static int open_file(FILE **file_ptr, const char *path, const char *file_name, const char *extension, const char *mode){
-    char full_path[MAX_PATH_LENGTH] = {0};
+    char full_path[MAX_STRING_LENGTH] = {0};
     strcpy(full_path, path);
     strcat(full_path, file_name);
     strcat(full_path, extension);
