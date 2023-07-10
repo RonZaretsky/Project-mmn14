@@ -4,10 +4,12 @@
 
 
 typedef struct assembler_ast{
-    char error_msg[MAX_STRING_LENGTH];   
+    char error_msg[MAX_STRING_LENGTH];
+    char label_name[MAX_SYMBOL_LENGTH];
     enum {
-        OP,
-        DIR
+        op,
+        dir,
+        syntax_error
     } line_type;
     union {
         struct {
@@ -15,7 +17,7 @@ typedef struct assembler_ast{
                 dir_extern,
                 dir_entry,
                 dir_string,
-                dir_data,
+                dir_data
             } dir_type;
             union {
                 char *label_name;
@@ -48,7 +50,7 @@ typedef struct assembler_ast{
 
                 /* 0 operands */
                 op_rts,
-                op_stop,
+                op_stop
             } op_type;
             union{
                 int const_num;
