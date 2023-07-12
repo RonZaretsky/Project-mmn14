@@ -35,12 +35,12 @@ typedef struct assembler_ast{
                 op_cmp,
                 op_add,
                 op_sub,
-                op_lea,
+                op_lea = 6,
 
                 /* 1 operand */
-                op_not,
-                op_clr,
-                op_inc,
+                op_not = 4 ,
+                op_clr = 5,
+                op_inc = 7,
                 op_dec,
                 op_jmp,
                 op_bne,
@@ -52,6 +52,12 @@ typedef struct assembler_ast{
                 op_rts,
                 op_stop
             } op_type;
+            enum {
+                none = 0,
+                number = 1,
+                label = 3,
+                reg = 5
+            } op_operand_option[2];
             union{
                 int const_num;
                 int reg_num;
