@@ -27,7 +27,6 @@ $(PROG_NAME): main.o lexer.o preprocessor.o assembler.o trie.o vector.o
 	$(CC) $(CFLAGS) $(OBJ_DIR)/*.o -o $(BIN_DIR)/$@ $(LDFLAGS)
 
 main.o: main.c assembler/assembler.h global/defines.h
-lexer.o: lexer/lexer.c
 preprocessor.o: preprocessor/preprocessor.c \
  preprocessor/../data_structures/vector/vector.h \
  preprocessor/../data_structures/trie/trie.h \
@@ -39,7 +38,7 @@ assembler.o: assembler/assembler.c assembler/assembler.h \
  assembler/../data_structures/trie/trie.h assembler/../global/defines.h
 trie.o: data_structures/trie/trie.c data_structures/trie/trie.h
 vector.o: data_structures/vector/vector.c data_structures/vector/vector.h
-
+lexer.o: lexer/lexer.c lexer/lexer.h lexer/../global/defines.h
 
 %.o:
 	$(CC) $(CFLAGS) -c $< -o $(OBJ_DIR)/$@
@@ -59,6 +58,9 @@ zip: clean
 run:
 	build/bin/mmn14 $(ARGS)
 	
+
+
+
 
 
 

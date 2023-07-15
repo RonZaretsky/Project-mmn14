@@ -47,7 +47,7 @@ void * const * vector_end(const Vector v);
  * @param v Your vector
  * @return size_t 
  */
-size_t vector_get_item_count(const Vector v);
+size_t vector_get_items_count(const Vector v);
 
 /**
  * @brief Item insertion.
