@@ -172,8 +172,10 @@ static int compile(FILE * file, object_file * objfile){
                             /* if label */
                             case label:
                                 exists_symbol = trie_exists(objfile->symbols_names, ast.op_or_dir.op_line.op_content[i].label_name);
+                                /* if symbol exists and is not entry */
                                 if(exists_symbol && exists_symbol->type != symbol_entry){
                                     machine_word = exists_symbol->address << 2;
+                                    /* if symbol is external insert it to table*/
                                     if(exists_symbol->type == symbol_extern ){
                                         machine_word |= 1;
                                         extern_call_adress = vector_get_items_count(objfile->code_image) + 100 + 1;
@@ -184,7 +186,9 @@ static int compile(FILE * file, object_file * objfile){
                                         machine_word |= 2;
                                     }
                                 }
+                                /* insert machine word*/
                                 just_inserted = vector_insert(objfile->code_image, &machine_word);
+                                /* if symbol doesnt exists and it is entry */
                                 if(!exists_symbol || (exists_symbol && exists_symbol->type == symbol_entry)){
                                     /* incase no symbol found, save the pointer to update the adress later */
                                     strcpy(m_symbol.name, ast.op_or_dir.op_line.op_content[i].label_name);
@@ -204,7 +208,7 @@ static int compile(FILE * file, object_file * objfile){
                 
 
             } else {
-                /* this is for rst and stop op codes but it does nothing so it is empty */
+                /* this is for rst and stop op codes but it does not have operands so it is empty */
             }
         }
         line_cnt++;
@@ -230,31 +234,32 @@ static void * ctor_symbol(const void * copy){
 static void dtor_symbol(void * to_delete){
     free(to_delete);
 }
-
+/* this is a constructor for extern call vectors*/
 static void * extern_call_ctor(const void * copy){
     return memcpy(malloc(sizeof(extern_call)), copy, sizeof(extern_call));
 
 }
-
+/* this is a distructor for extern call vectors*/
 static void extern_call_dtor(void * to_delete){
     extern_call * e_call = to_delete;
     vector_destroy(&(e_call->call_address));
     free(e_call);
 
 }
-
+/* this is a constructor for missing symbol vectors*/
 static void * ctor_missing_symbol(const void * copy){
     return memcpy(malloc(sizeof(missing_symbol)), copy, sizeof(missing_symbol));
 }
-
+/* this is a distructor for missing symbol vectors*/
 static void dtor_missing_symbol(void * to_delete){
     free(to_delete);
 }
-
+/* adds new extern if not exists */
 static void add_extern(Vector extern_calls, const char * extern_name, const unsigned int address){
     void * const * begin;
     void * const * end;
     extern_call e_call = {0};
+    /* check if extern name already exists */
     VECTOR_FOR_EACH(begin,end,extern_calls){
         if(*begin){
             if(strcmp(extern_name, ((const extern_call *)(*begin))->extern_name) == 0){
@@ -263,6 +268,7 @@ static void add_extern(Vector extern_calls, const char * extern_name, const unsi
             }
         }
     }
+    /* if not exists, add it */
     strcpy(e_call.extern_name, extern_name);
     e_call.call_address = new_vector(ctor_mem_word, dtor_mem_word);
     vector_insert(e_call.call_address, &address);
