@@ -18,11 +18,14 @@ typedef struct symbol{
         symbol_entry_data
     } type;
     unsigned int address;
+    unsigned int declared_line;
     char name[MAX_SYMBOL_LENGTH+1];
 } symbol;
 
 typedef struct missing_symbol{
     char name[MAX_SYMBOL_LENGTH];
+    unsigned int call_line;
+    unsigned int call_address;
     unsigned int * address;
 } missing_symbol;
 
@@ -32,7 +35,6 @@ typedef struct object_file{
     Vector data_image;
     Vector symbol_table;
     Vector extern_symbols_table;
-    Vector missing_symbols_table;
     Trie symbols_names;
 } object_file;
 
@@ -42,7 +44,7 @@ typedef struct extern_call{
 } extern_call;
 
 /* Signatures of methods */
-static int compile(FILE * file, object_file * objfile);
+static int compile(FILE * file, object_file * objfile, const char* file_name);
 static void * ctor_mem_word(const void * copy);
 static void dtor_mem_word(void * to_delete);
 static void * ctor_symbol(const void * copy);
@@ -55,6 +57,7 @@ static void add_extern(Vector extern_calls, const char * extern_name, const unsi
 
 /* Main function of assembler*/
 int assemble(int file_count, char **file_names){
+    
     return 0;
 }
 
@@ -62,8 +65,9 @@ int assemble(int file_count, char **file_names){
 /* Implemention of methods */
 
 /* compile method */
-static int compile(FILE * file, object_file * objfile){
+static int compile(FILE * file, object_file * objfile, const char* file_name){
     missing_symbol m_symbol;
+    Vector missing_symbols_table;
     char line[MAX_LINE_LENGTH] = {0};
     unsigned int line_cnt = 0;
     assembler_ast ast = {0};
@@ -73,8 +77,12 @@ static int compile(FILE * file, object_file * objfile){
     symbol *exists_symbol;
     unsigned int extern_call_adress = 0;
     unsigned int machine_word = 0;
+    unsigned int * missing_machine_word;
     int i;
     unsigned int * just_inserted;
+    const char * data_str;
+    void * const * begin;
+    void * const * end;
 
     /*  runs through all the lines in am file after the preprocess
         each row goes through a logical checking process */
@@ -102,6 +110,7 @@ static int compile(FILE * file, object_file * objfile){
                 else {
                     current_symbol.type = symbol_code;
                     current_symbol.address = vector_get_items_count(objfile->code_image) + 100;
+                    current_symbol.declared_line = line_cnt;
                     trie_insert(objfile->symbols_names, current_symbol.name, vector_insert(objfile->symbol_table, &current_symbol));
                 }
             } 
@@ -121,6 +130,7 @@ static int compile(FILE * file, object_file * objfile){
                     if(ast.op_or_dir.dir_line.dir_type >= dir_string){
                         current_symbol.type = symbol_entry_data;
                         current_symbol.address = vector_get_items_count(objfile->data_image);
+                        current_symbol.declared_line = line_cnt;
                         trie_insert(objfile->symbols_names, current_symbol.name, vector_insert(objfile->symbol_table, &current_symbol));
                     }
 
@@ -134,8 +144,51 @@ static int compile(FILE * file, object_file * objfile){
             has_error = TRUE;
         /* if the line is directive */
         } else if (ast.line_type == dir){
+            if(ast.op_or_dir.dir_line.dir_type == dir_string){
+                for( i = 0, data_str = ast.op_or_dir.dir_line.dir_content.string;*data_str;data_str++){
+                    machine_word = *data_str;
+                    vector_insert(objfile->data_image, &machine_word);
+                }
+                machine_word = 0;
+                vector_insert(objfile->data_image, &machine_word);
+            }
             if(ast.op_or_dir.dir_line.dir_type == dir_data){
+                for(i=0; i<ast.op_or_dir.dir_line.dir_content.data.data_count; i++){
+                    machine_word = ast.op_or_dir.dir_line.dir_content.data.data[i];
+                    vector_insert(objfile->data_image, &machine_word);
+                }
 
+            }
+            if(ast.op_or_dir.dir_line.dir_type == dir_entry || ast.op_or_dir.dir_line.dir_type == dir_extern){
+                exists_symbol = trie_exists(objfile->symbols_names, ast.op_or_dir.dir_line.dir_content.label_name);
+                if(exists_symbol){
+                    if(ast.op_or_dir.dir_line.dir_type == dir_entry){
+                        if(exists_symbol->type == symbol_entry || exists_symbol->type >= symbol_entry_code){
+                            /* ERROR REDEF */
+                        }
+                        else if(exists_symbol->type == symbol_extern){
+                            /* ERROR dec as extern and now dec as entry */
+                        } else {
+                            if(exists_symbol->type == symbol_code){
+                                exists_symbol->type = symbol_entry_code;
+                            } else {
+                                exists_symbol->type = symbol_entry_data;
+                            }
+                        }
+                    }else{
+                        if(exists_symbol->type == symbol_extern){
+                            /* ERROR REDEF */
+                        } else{
+                            /* ERROR dec as !extern and now dec as extern */
+                        }
+                    }
+                }else{
+                    strcpy(current_symbol.name, ast.op_or_dir.dir_line.dir_content.label_name);
+                    current_symbol.type = ast.op_or_dir.dir_line.dir_type;
+                    current_symbol.declared_line = line_cnt;
+                    current_symbol.address = 0;
+                    trie_insert(objfile->symbols_names, current_symbol.name, vector_insert(objfile->symbol_table, &current_symbol));
+                }
             }
         /* if the line is operation */
         } else if (ast.line_type == op){
@@ -178,7 +231,7 @@ static int compile(FILE * file, object_file * objfile){
                                     /* if symbol is external insert it to table*/
                                     if(exists_symbol->type == symbol_extern ){
                                         machine_word |= 1;
-                                        extern_call_adress = vector_get_items_count(objfile->code_image) + 100 + 1;
+                                        extern_call_adress = vector_get_items_count(objfile->code_image) + 100;
                                         add_extern(objfile->extern_symbols_table, exists_symbol->name, extern_call_adress);
                                         strcpy(m_symbol.name, exists_symbol->name);
                                         vector_insert(e_call.call_address, &extern_call_adress);
@@ -193,7 +246,9 @@ static int compile(FILE * file, object_file * objfile){
                                     /* incase no symbol found, save the pointer to update the adress later */
                                     strcpy(m_symbol.name, ast.op_or_dir.op_line.op_content[i].label_name);
                                     m_symbol.address = just_inserted;
-                                    vector_insert(objfile->missing_symbols_table, &m_symbol);
+                                    m_symbol.call_line = line_cnt;
+                                    m_symbol.call_address = vector_get_items_count(objfile->code_image) + 100 -1;
+                                    vector_insert(missing_symbols_table, &m_symbol);
                                 }
                                 break;
                             case none:
@@ -203,10 +258,6 @@ static int compile(FILE * file, object_file * objfile){
                     }
 
                 }
-
-            } else if (ast.op_or_dir.op_line.op_type >= op_not && ast.op_or_dir.op_line.op_type <= op_jsr){
-                
-
             } else {
                 /* this is for rst and stop op codes but it does not have operands so it is empty */
             }
@@ -214,10 +265,33 @@ static int compile(FILE * file, object_file * objfile){
         line_cnt++;
     }
     
+    VECTOR_FOR_EACH(begin,end,objfile->symbol_table){
+        if(*begin){
+            if(((symbol*)(*begin))->type == symbol_entry || ((symbol*)(*begin))->type >= symbol_entry_code){
+                /* Error entry x was dec in line y but was never defined in am file*/
+            }
+        }
+    }
+
+    VECTOR_FOR_EACH(begin,end,missing_symbols_table){
+        if(*begin){
+            exists_symbol = trie_exists(objfile->symbols_names, ((missing_symbol*)(*begin))->name);
+            if(exists_symbol && exists_symbol->type != symbol_entry){
+                *(((missing_symbol*)(*begin))->address) = exists_symbol->address << 2;
+                if(exists_symbol->type = symbol_extern){
+                    *(((missing_symbol*)(*begin))->address) != 1;
+                    add_extern(objfile->extern_symbols_table,exists_symbol->name, ((missing_symbol*)(*begin))->call_address);
+                } else {
+                    *(((missing_symbol*)(*begin))->address) != 2;
+                }
+            } else {
+                /* error missing label */
+            }
+        }
+    }
     
     return has_error;
 }
-
 /* this is a constructor for machine word vectors*/
 static void * ctor_mem_word(const void * copy){
     return memcpy(malloc(sizeof(unsigned int)), copy, sizeof(unsigned int));
@@ -274,3 +348,13 @@ static void add_extern(Vector extern_calls, const char * extern_name, const unsi
     vector_insert(e_call.call_address, &address);
     vector_insert(extern_calls, &e_call);
 }
+
+
+
+
+
+
+
+
+
+
