@@ -54,10 +54,28 @@ static void extern_call_dtor(void * to_delete);
 static void * missing_symbol_ctor(const void * copy);
 static void missing_symbol_dtor(void * to_delete);
 static void add_extern(Vector extern_calls, const char * extern_name, const unsigned int address);
+static object_file create_new_objfile();
+static void destroy_objfile(object_file * objfile);
 
 /* Main function of assembler*/
 int assemble(int file_count, char **file_names){
-    
+    int i;
+    const char * am_file_name;
+    FILE * am_file;
+    object_file objfile;
+    for(i = 0; i < file_count; i++){
+        am_file_name = preprocesses_file(file_names[i]);
+        am_file = fopen(am_file_name, "r");
+        if(am_file_name && am_file){
+            objfile = create_new_objfile();
+            if(complie(am_file, &objfile, am_file_name)){
+
+            }
+            fclose(am_file);
+            free((void *)am_file_name);
+            destroy_objfile(&objfile);
+        }
+    }
     return 0;
 }
 
@@ -348,9 +366,24 @@ static void add_extern(Vector extern_calls, const char * extern_name, const unsi
     vector_insert(e_call.call_address, &address);
     vector_insert(extern_calls, &e_call);
 }
-
-
-
+/*returns new objfile*/
+static object_file create_new_objfile(){
+    object_file objfile;
+    objfile.code_image = new_vector(ctor_mem_word, dtor_mem_word);
+    objfile.data_image = new_vector(ctor_mem_word, dtor_mem_word);
+    objfile.symbol_table = new_vector(ctor_symbol, dtor_symbol);
+    objfile.extern_symbols_table = new_vector(extern_call_ctor, extern_call_dtor);
+    objfile.symbols_names = trie(); 
+    return objfile;
+}
+/* destroys objfile*/
+static void destroy_objfile(object_file * objfile){
+    vector_destroy(&(objfile->code_image));
+    vector_destroy(&(objfile->data_image));
+    vector_destroy(&(objfile->symbol_table));
+    vector_destroy(&(objfile->extern_symbols_table));
+    trie_destroy(&(objfile->symbols_names));
+}
 
 
 

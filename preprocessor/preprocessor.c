@@ -38,7 +38,7 @@ static LineType get_line_type(char *line, Macro **macro);
 
 
 
-int preprocesses_file(const char *file_name){
+const char * preprocesses_file(const char *file_name){
     FILE *as_file_ptr;
     FILE *am_file_ptr;
     Vector file_content;

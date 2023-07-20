@@ -15,9 +15,9 @@
  * @brief Preprocesses a file.
  * 
  * @param file_name The name of the file to preprocess.
- * @return void* A pointer to the preprocessed file.
+ * @return const char * - name of the new file.
  */
-int preprocesses_file(const char * file_name);
+const char * preprocesses_file(const char * file_name);
 
 
 
