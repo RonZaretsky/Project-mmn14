@@ -68,7 +68,7 @@ int assemble(int file_count, char **file_names){
         am_file = fopen(am_file_name, "r");
         if(am_file_name && am_file){
             objfile = create_new_objfile();
-            if(complie(am_file, &objfile, am_file_name)){
+            if(compile(am_file, &objfile, am_file_name)){
 
             }
             fclose(am_file);
@@ -85,7 +85,7 @@ int assemble(int file_count, char **file_names){
 /* compile method */
 static int compile(FILE * file, object_file * objfile, const char* file_name){
     missing_symbol m_symbol;
-    Vector missing_symbols_table;
+    Vector missing_symbols_table = new_vector(ctor_missing_symbol, dtor_missing_symbol);
     char line[MAX_LINE_LENGTH] = {0};
     unsigned int line_cnt = 0;
     assembler_ast ast = {0};
@@ -307,6 +307,8 @@ static int compile(FILE * file, object_file * objfile, const char* file_name){
             }
         }
     }
+
+    vector_destroy(missing_symbols_table);
     
     return has_error;
 }

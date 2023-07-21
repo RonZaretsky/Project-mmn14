@@ -8,16 +8,8 @@
 #include "../global/dir_ins_names.h"
 #include "preprocessor.h"
 
-#define SKIP_SPACES(line) while(*line != ' ' && *line != '\t') line++
-#define SKIP_MCRO(line) while(*line == 'm' || *line == 'c' || *line == 'r' || *line == 'o') line++
+#define SKIP_SPACES(line) while(*line != ' ' && *line != '\t') line++;
 
-typedef enum LineType{
-    START_MACRO_DEF,
-    END_MACRO_DEF,
-    MACRO_CALL,
-    NORMAL_LINE,
-    COMMENT_OR_EMPTY_LINE
-} LineType ;
 
 typedef struct Macro {
     char name[MAX_LINE_LENGTH];
@@ -31,8 +23,8 @@ static void* line_ctor(const void * copy);
 static void line_dtor(void * item);
 static void load_am_file(FILE ** file, Vector *file_content);
 static int preprocess_macros_line_by_line(FILE **file, Vector *new_file_content);
-static LineType get_line_type(char *line, Macro **macro);
-
+static char * get_full_path(const char *path, const char *file_name, const char *extension);
+static char * get_next_word(char *line);
 
 
 
@@ -75,28 +67,27 @@ const char * preprocesses_file(const char *file_name){
 
 
 static int preprocess_macros_line_by_line(FILE **file, Vector *new_file_content){
-    char line[MAX_LINE_LENGTH];
+    char * line;
+    char * word;
     Macro *macro;
-    LineType line_type;
     Trie macros = trie();
     Vector macros_content = new_vector(macro_ctor, macro_dtor); 
 
 
 
     while(fgets(line, sizeof(line), *file) != NULL){
-        line_type = get_line_type(line, &macro);
-        switch(line_type){
-            case START_MACRO_DEF:
-                break;
-            case END_MACRO_DEF:
-                break;
-            case MACRO_CALL:
-                break;
-            case NORMAL_LINE:
-                vector_insert(*new_file_content, line);
-                break;
-            case COMMENT_OR_EMPTY_LINE:
-                break;
+        while(line == ' ' || line == '\t') line++;
+        if(line == '\n' || line == '\0' || line == EOF) continue;
+        word = get_next_word(line);
+        /* if word is exists macro*/
+        macro = trie_exists(&macros, word);
+        if(macro){
+
+        }
+        else if(strcmp(word, MCRO) == 0){
+            /* check if word is not directive or instruction*/
+            
+
         }
     }
 
@@ -105,33 +96,41 @@ static int preprocess_macros_line_by_line(FILE **file, Vector *new_file_content)
     return SUCCESS;
 }
 
-static LineType get_line_type(char *line, Macro **macro){
-    return NORMAL_LINE;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+static char * get_next_word(char *line){
+    char * word = malloc(MAX_LINE_LENGTH);
+    int i = 0;
+    SKIP_SPACES(line);
+    while(*line != ' ' && *line != '\t' && *line != '\n' && *line != '\0'){
+        word[i++] = *line;
+        line++;
+    }
+    word[i] = '\0';
+    return word;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 static void load_am_file(FILE ** file, Vector *file_content){
     void * const * begin;
@@ -144,16 +143,21 @@ static void load_am_file(FILE ** file, Vector *file_content){
 }
 
 static int open_file(FILE **file_ptr, const char *path, const char *file_name, const char *extension, const char *mode){
-    char full_path[MAX_STRING_LENGTH] = {0};
-    strcpy(full_path, path);
-    strcat(full_path, file_name);
-    strcat(full_path, extension);
-    *file_ptr = fopen(full_path, mode);
+    char * full_path = get_full_path(path,file_name,extension);
+    *file_ptr = fopen(get_full_path(path,file_name,extension), mode);
     if(*file_ptr == NULL){
         fprintf(stderr, "%sError%s: could not open file '%s'\n", BRED,reset, full_path);
         return(FAILURE);
     }
     return SUCCESS;
+}
+
+static char * get_full_path(const char *path, const char *file_name, const char *extension){
+    char full_path[MAX_STRING_LENGTH] = {0};
+    strcpy(full_path, path);
+    strcat(full_path, file_name);
+    strcat(full_path, extension);
+    return full_path;
 }
 
 static void* macro_ctor(const void * copy){
