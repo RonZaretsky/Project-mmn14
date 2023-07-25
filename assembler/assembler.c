@@ -68,9 +68,9 @@ int assemble(int file_count, char **file_names){
         am_file = fopen(am_file_name, "r");
         if(am_file_name && am_file){
             objfile = create_new_objfile();
-            if(compile(am_file, &objfile, am_file_name)){
+            /*if(compile(am_file, &objfile, am_file_name)){
 
-            }
+            }*/
             fclose(am_file);
             free((void *)am_file_name);
             destroy_objfile(&objfile);
@@ -308,7 +308,7 @@ static int compile(FILE * file, object_file * objfile, const char* file_name){
         }
     }
 
-    vector_destroy(missing_symbols_table);
+    vector_destroy(&missing_symbols_table);
     
     return has_error;
 }

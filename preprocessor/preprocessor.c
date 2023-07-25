@@ -1,201 +1,174 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
+#include "preprocessor.h"
 #include "../data_structures/vector/vector.h"
 #include "../data_structures/trie/trie.h"
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include "../global/defines.h"
+#include <ctype.h>
 #include "../global/dir_ins_names.h"
-#include "preprocessor.h"
 
-#define SKIP_SPACES(line) while(*line != ' ' && *line != '\t') line++;
+#define SKIP_SPACES(line) while(*line && isspace(*line)) line++
 
 
-typedef struct Macro {
-    char name[MAX_LINE_LENGTH];
+typedef struct macro{
+    char name[MAX_LINE_LENGTH+1];
     Vector lines;
 } Macro;
 
-static int open_file(FILE **file_ptr, const char *path, const char *file_name, const char *extension, const char * mode);
-static void* macro_ctor(const void * copy);
+enum line_type{
+    START_MACRO,
+    END_MACRO,
+    CALL_MACRO,
+    COMMENT_OR_EMPTY,
+    OTHER,
+};
+
+
+static enum line_type get_line_type(const char * line, Trie * macro_names, Vector * macro_table ,Macro ** macro);
+static void * macro_ctor(const void * copy);
 static void macro_dtor(void * item);
-static void* line_ctor(const void * copy);
+static void * line_ctor(const void * copy);
 static void line_dtor(void * item);
-static void load_am_file(FILE ** file, Vector *file_content);
-static int preprocess_macros_line_by_line(FILE **file, Vector *new_file_content);
-static char * get_full_path(const char *path, const char *file_name, const char *extension);
-static char * get_next_word(char *line);
-
-
+static int is_mcro_name_dir_or_op(const char * line);
+static void load_am_file(FILE ** file, Vector * file_content);
 
 
 
 const char * preprocesses_file(const char *file_name){
-    FILE *as_file_ptr;
-    FILE *am_file_ptr;
-    Vector file_content;
-    file_content = new_vector(line_ctor, line_dtor);
+    char line[MAX_LINE_LENGTH+1] = {0};
+    char * macro_name;
 
-    /* open as file for reasing */
-    if(open_file(&as_file_ptr, AS_FILES_PATH, file_name, AS_FILE_EXTENSION, "r") == FAILURE){
-        vector_destroy(&file_content);
-        return FAILURE;
-    }
+    char as_file_name[MAX_STRING_LENGTH+1] = {0};
+    char am_file_name[MAX_STRING_LENGTH+1] = {0};
 
-    
+    Vector am_file_lines;
+    Vector macro_table;
+    Trie macro_names;
 
-    preprocess_macros_line_by_line(&as_file_ptr, &file_content);
-    
+    FILE * as_file;
+    FILE * am_file;
 
+    Macro * macro;
 
-    /* open am file for writing */
-    if(open_file(&am_file_ptr, AM_FILES_PATH, file_name, AM_FILE_EXTENSION, "w") == FAILURE){
-        vector_destroy(&file_content);
-        fclose(as_file_ptr);
-        return FAILURE;
-    }
+    int is_macro_def = FALSE;
+    int is_error = FALSE;
 
-    load_am_file(&am_file_ptr, &file_content);
-
-    
-    vector_destroy(&file_content);
-    fclose(as_file_ptr);
-    fclose(am_file_ptr);
-    return SUCCESS;
-}
-
-
-
-static int preprocess_macros_line_by_line(FILE **file, Vector *new_file_content){
-    char * line;
-    char * word;
-    Macro *macro;
-    Trie macros = trie();
-    Vector macros_content = new_vector(macro_ctor, macro_dtor); 
-
-
-
-    while(fgets(line, sizeof(line), *file) != NULL){
-        while(line == ' ' || line == '\t') line++;
-        if(line == '\n' || line == '\0' || line == EOF) continue;
-        word = get_next_word(line);
-        /* if word is exists macro*/
-        macro = trie_exists(&macros, word);
-        if(macro){
-
-        }
-        else if(strcmp(word, MCRO) == 0){
-            /* check if word is not directive or instruction*/
-            
-
-        }
-    }
-
-    trie_destroy(&macros);
-    vector_destroy(&macros_content);
-    return SUCCESS;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-static char * get_next_word(char *line){
-    char * word = malloc(MAX_LINE_LENGTH);
-    int i = 0;
-    SKIP_SPACES(line);
-    while(*line != ' ' && *line != '\t' && *line != '\n' && *line != '\0'){
-        word[i++] = *line;
-        line++;
-    }
-    word[i] = '\0';
-    return word;
-}
-
-static void load_am_file(FILE ** file, Vector *file_content){
     void * const * begin;
     void * const * end;
-    char line[MAX_LINE_LENGTH] = {0};
+
+
+    strcpy(as_file_name,AS_FILES_PATH);
+    strcat(as_file_name,file_name);
+    strcat(as_file_name,AS_FILE_EXTENSION);
+    strcpy(am_file_name,AM_FILES_PATH);
+    strcat(am_file_name,file_name);
+    strcat(am_file_name,AM_FILE_EXTENSION);
+
+    as_file = fopen(as_file_name, "r");
+
+    if(!as_file){
+        printf("Error: file %s does not exist.\n", as_file_name);
+        return NULL;
+    }
+
+    macro_table = new_vector(macro_ctor, macro_dtor);
+    am_file_lines = new_vector(line_ctor, line_dtor); 
+    macro_names = trie();
     
-    VECTOR_FOR_EACH(begin,end,(*file_content)){
-        if(*begin != NULL) fprintf(*file, "%s", (char*)*begin);
+    while(fgets(line, sizeof(line), as_file) && !is_error){
+        switch(get_line_type(line, &macro_names, &macro_table, &macro)){
+            case START_MACRO:
+                break;
+            case END_MACRO: 
+                break;
+            case CALL_MACRO: 
+                break;
+            case COMMENT_OR_EMPTY:
+                break;
+            case OTHER: 
+                if(is_macro_def){
+
+                }else{
+                    vector_insert(am_file_lines, line);
+                }
+                break;
+            default: break;
+        }
     }
-}
-
-static int open_file(FILE **file_ptr, const char *path, const char *file_name, const char *extension, const char *mode){
-    char * full_path = get_full_path(path,file_name,extension);
-    *file_ptr = fopen(get_full_path(path,file_name,extension), mode);
-    if(*file_ptr == NULL){
-        fprintf(stderr, "%sError%s: could not open file '%s'\n", BRED,reset, full_path);
-        return(FAILURE);
+    
+    if(!is_error){
+        am_file = fopen(am_file_name, "w");
+        load_am_file(&am_file, &am_file_lines);
+        fclose(am_file);
     }
-    return SUCCESS;
+    
+    vector_destroy(&macro_table);
+    vector_destroy(&am_file_lines);
+    trie_destroy(&macro_names);
+    fclose(as_file);
 }
 
-static char * get_full_path(const char *path, const char *file_name, const char *extension){
-    char full_path[MAX_STRING_LENGTH] = {0};
-    strcpy(full_path, path);
-    strcat(full_path, file_name);
-    strcat(full_path, extension);
-    return full_path;
+static enum line_type get_line_type(const char * line, Trie * macro_names, Vector * macro_table ,Macro ** macro){
+    char *word;
+    char line_copy[MAX_LINE_LENGTH+1] = {0};
+    strcpy(line_copy, line);
+    char * line_ptr = line_copy;
+    word = strchr(line_ptr, ';');
+    if(word) *word = '\0';
+    SKIP_SPACES(line_ptr);
+    if(*line_ptr == '\0') return COMMENT_OR_EMPTY;
+
+    return OTHER;
 }
 
-static void* macro_ctor(const void * copy){
-    Macro *macro = malloc(sizeof(Macro));
-    strcpy(macro->name, ((Macro*)copy)->name);
-    macro->lines = new_vector(line_ctor, line_dtor);
-    return macro;
+static void * macro_ctor(const void * copy){
+    Macro * macro = copy;
+    Macro * new_macro = malloc(sizeof(Macro));
+    strcpy(new_macro->name, macro->name);
+    new_macro->lines = new_vector(line_ctor, line_dtor);
+    return new_macro;
 }
 
 static void macro_dtor(void * item){
-    Macro  *macro = item;
+    Macro * macro = item;
     vector_destroy(&macro->lines);
-    free((void*)macro);
+    free(macro);
 }
 
-static void* line_ctor(const void * copy){
-    return strcpy(malloc(strlen(copy) + 1), copy);
+static void * line_ctor(const void * copy){
+    return strcpy(malloc(strlen(copy) + 1), (char*)copy);
 }
 
 static void line_dtor(void * item){
     free(item);
 }
 
+static void load_am_file(FILE ** file, Vector * file_content){
+    void * const * begin;
+    void * const * end;
+    char line[MAX_LINE_LENGTH+1] = {0};
 
+    VECTOR_FOR_EACH(begin, end, *file_content){
+        if(*begin != NULL) fprintf(*file, "%s", (char*)*begin);
+    }
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+static int is_mcro_name_dir_or_op(const char * line){
+    int i;
+    for( i = 0; i < DIRECTIVES_COUNT; i++){
+        if(!strcmp(line, directives[i])){
+            /* mcro name cant be a directive name*/
+            fprintf(stderr, "Error: macro name can't be a directive name.\n");
+            return FAILURE;
+        }
+    }
+    for( i = 0; i < INSTRUCTIONS_COUNT; i++){
+        if(!strcmp(line, instructions[i])){
+            /* mcro name cant be a instuction name*/
+            fprintf(stderr, "Error: macro name can't be a instruction name.\n");
+            return FAILURE;
+        }
+    }
+    return SUCCESS;
+}

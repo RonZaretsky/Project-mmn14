@@ -3,7 +3,7 @@ CFLAGS 		= -ansi -pedantic -Wall
 LDFLAGS		= -lm
 PROG_NAME 	= mmn14
 ZIP_NAME	= $(PROG_NAME).zip
-ARGS		= test2
+ARGS		= test1
 
 BUILD_DIR 	= build
 OBJ_DIR		= $(BUILD_DIR)/obj

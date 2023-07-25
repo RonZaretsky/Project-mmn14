@@ -6,5 +6,5 @@
 
 int main(int argc, char  **argv)
 {
-    return assemble(argc, argv);
+    return assemble(--argc, ++argv);
 }

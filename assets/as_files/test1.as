@@ -1,10 +1,10 @@
 MAIN:   mov @r3 ,LENGTH
 LOOP:   jmp L1
-        mcro sub
+        mcro test
         ;
                 sub @r1, @r4
                 bne END
-        endmcro
+        endmcro  
         prn -5
         bne LOOP
         m1

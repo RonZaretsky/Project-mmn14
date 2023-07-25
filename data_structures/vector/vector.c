@@ -12,18 +12,18 @@ struct vector{
     void (*dtor)(void *item);
 };
 
-Vector new_vector(void * (*ctor)(const void *copy),  void (*dtor)(void *item)){
-    Vector new = calloc(1,sizeof(struct vector)); 
-    if(new == NULL) return NULL;
+Vector new_vector(void * (*ctor)(const void *copy),void (*dtor)(void *item)) {
+    Vector new = calloc(1,sizeof(struct vector));
+    if(new == NULL)
+        return NULL;
     new->capacity = VECTOR_BEGIN_SIZE;
-    new->items = calloc(VECTOR_BEGIN_SIZE, sizeof(void *));
-    if(new->items == NULL){
+    new->items = calloc(VECTOR_BEGIN_SIZE,sizeof(void*));
+    if(new->items == NULL) {
         free(new);
         return NULL;
     }
     new->ctor = ctor;
     new->dtor = dtor;
-
     return new;
 }
 
