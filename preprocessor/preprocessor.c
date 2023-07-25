@@ -22,6 +22,9 @@ enum line_type{
     CALL_MACRO,
     COMMENT_OR_EMPTY,
     OTHER,
+    BAD_ENDMCRO_CALL,
+    BAD_NEW_MACRO_CALL,
+    MACRO_ALREADY_EXISTS,
 };
 
 
@@ -79,12 +82,17 @@ const char * preprocesses_file(const char *file_name){
     while(fgets(line, sizeof(line), as_file) && !is_error){
         switch(get_line_type(line, &macro_names, &macro_table, &macro)){
             case START_MACRO:
+                is_macro_def = TRUE;
                 break;
             case END_MACRO: 
+                is_macro_def = FALSE;
                 break;
             case CALL_MACRO: 
                 break;
             case COMMENT_OR_EMPTY:
+                break;
+            case BAD_ENDMCRO_CALL:
+                is_error = TRUE;
                 break;
             case OTHER: 
                 if(is_macro_def){
@@ -118,7 +126,34 @@ static enum line_type get_line_type(const char * line, Trie * macro_names, Vecto
     if(word) *word = '\0';
     SKIP_SPACES(line_ptr);
     if(*line_ptr == '\0') return COMMENT_OR_EMPTY;
+    word = strtok(line_ptr, SPACE_CHARS);
+    if(!strcmp(word, MCRO)) {
+        line_ptr += strlen(word)+1;
+        word = strtok(line_ptr, SPACE_CHARS);
+        if(!is_mcro_name_dir_or_op(word)){ 
+            return BAD_NEW_MACRO_CALL;
+        }
+        if(trie_exists(*macro_names, word)) {
+            fprintf(stderr, "Error: macro %s already exists.\n", word);
+            return MACRO_ALREADY_EXISTS;
+        }
+        line_ptr += strlen(word)+1;
+        SKIP_SPACES(line_ptr);
+        if(*line_ptr != '\0') {
+            fprintf(stderr, "Error: extra characters after new macro call.\n", word);
+            return BAD_NEW_MACRO_CALL;
+        }
 
+        return START_MACRO;
+    } else if(!strcmp(word, ENDMCRO)) {
+        line_ptr += strlen(word)+1;
+        SKIP_SPACES(line_ptr);
+        if(*line_ptr != '\0') {
+            fprintf(stderr, "Error: extra characters after endmcro.\n");
+            return BAD_ENDMCRO_CALL;
+        }
+        return END_MACRO;
+    } 
     return OTHER;
 }
 

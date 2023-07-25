@@ -24,6 +24,7 @@
 #define EXT_FILES_PATH "assets/ext_files/"
 #define MCRO "mcro"
 #define ENDMCRO "endmcro"
+#define SPACE_CHARS " \t\n\v\f\r"
 
 
 #define BLK "\033[0;30m"
