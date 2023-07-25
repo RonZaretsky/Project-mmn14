@@ -53,6 +53,7 @@ const char * preprocesses_file(const char *file_name){
     FILE * am_file;
 
     Macro * macro;
+    Macro * s_macro;
 
     int is_macro_def = FALSE;
     int is_error = FALSE;
@@ -85,18 +86,27 @@ const char * preprocesses_file(const char *file_name){
                 is_macro_def = TRUE;
                 break;
             case END_MACRO: 
+                free(macro);
                 is_macro_def = FALSE;
                 break;
-            case CALL_MACRO: 
+            case CALL_MACRO:
+                macro_name = strtok(line, SPACE_CHARS);
+                s_macro = trie_exists(macro_names, macro_name);
+                VECTOR_FOR_EACH(begin, end, s_macro->lines){
+                    if(*begin)
+                        vector_insert(am_file_lines, *begin);
+                }
                 break;
             case COMMENT_OR_EMPTY:
                 break;
+            case BAD_NEW_MACRO_CALL:
+            case MACRO_ALREADY_EXISTS:
             case BAD_ENDMCRO_CALL:
                 is_error = TRUE;
                 break;
             case OTHER: 
                 if(is_macro_def){
-
+                    vector_insert(((Macro*)(trie_exists(macro_names, macro->name)))->lines, line);
                 }else{
                     vector_insert(am_file_lines, line);
                 }
@@ -143,17 +153,23 @@ static enum line_type get_line_type(const char * line, Trie * macro_names, Vecto
             fprintf(stderr, "Error: extra characters after new macro call.\n", word);
             return BAD_NEW_MACRO_CALL;
         }
-
+        *macro = malloc(sizeof(Macro));
+        strcpy((*macro)->name, word);
+        trie_insert(*macro_names, word, vector_insert(*macro_table, *macro));
         return START_MACRO;
     } else if(!strcmp(word, ENDMCRO)) {
         line_ptr += strlen(word)+1;
         SKIP_SPACES(line_ptr);
         if(*line_ptr != '\0') {
+            free(*macro);
             fprintf(stderr, "Error: extra characters after endmcro.\n");
             return BAD_ENDMCRO_CALL;
         }
+        
         return END_MACRO;
-    } 
+    } else if(trie_exists(*macro_names,word)){
+        return CALL_MACRO;
+    }
     return OTHER;
 }
 

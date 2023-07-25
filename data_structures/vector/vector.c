@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define VECTOR_BEGIN_SIZE 1
+#define VECTOR_BEGIN_SIZE 10
 
 struct vector{
     void **items;
