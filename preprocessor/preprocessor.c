@@ -214,7 +214,7 @@ static void * line_ctor(const void * copy){
 static void line_dtor(void * item){
     free(item);
 }
-/* this function loads am file with lines from vector*/
+/* this method loads am file with lines from vector*/
 static void load_am_file(FILE ** file, Vector * file_content){
     void * const * begin;
     void * const * end;
@@ -224,7 +224,7 @@ static void load_am_file(FILE ** file, Vector * file_content){
         if(*begin != NULL) fprintf(*file, "%s", (char*)*begin);
     }
 }
-/* this functions checks if macro's names id direction or operation*/
+/* this method checks if macro's names id direction or operation*/
 static int is_mcro_name_dir_or_op(const char * line){
     int i;
     for( i = 0; i < DIRECTIVES_COUNT; i++){
