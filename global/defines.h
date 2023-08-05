@@ -25,6 +25,14 @@
 #define MCRO "mcro"
 #define ENDMCRO "endmcro"
 #define SPACE_CHARS " \t\n\v\f\r"
+#define MAX_REG 7
+#define MIN_REG 0
+#define MAX_CONST_NUM 511
+#define MIN_CONST_NUM -512
+
+#define SKIP_SPACES(line) while(*line && isspace(*line)) line++
+#define SKIP_SPACES_BASE(line, base) while(*line && isspace(*line) && base != line) line++
+
 
 
 #define BLK "\033[0;30m"

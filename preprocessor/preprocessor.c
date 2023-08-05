@@ -8,7 +8,6 @@
 #include "../global/defines.h"
 #include "../global/dir_ins_names.h"
 
-#define SKIP_SPACES(line) while(*line && isspace(*line)) line++
 
 /* macro struct */
 typedef struct macro{
@@ -25,7 +24,7 @@ enum line_type{
     OTHER,
     BAD_ENDMCRO_CALL,
     BAD_NEW_MACRO_CALL,
-    MACRO_ALREADY_EXISTS,
+    MACRO_ALREADY_EXISTS
 };
 
 /* Signatures of methods */
@@ -218,7 +217,6 @@ static void line_dtor(void * item){
 static void load_am_file(FILE ** file, Vector * file_content){
     void * const * begin;
     void * const * end;
-    char line[MAX_LINE_LENGTH+1] = {0};
 
     VECTOR_FOR_EACH(begin, end, *file_content){
         if(*begin != NULL) fprintf(*file, "%s", (char*)*begin);
