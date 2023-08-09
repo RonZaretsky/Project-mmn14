@@ -63,6 +63,7 @@ typedef enum{
 static void lexer_trie_init();
 static valid_label_err is_valid_label(const char *label);
 static void parse_operation_operands(assembler_ast * ast, char * operands_string, struct op_map * op_map_ptr);
+static void parse_directive(assembler_ast * ast, char * operands_string, struct dir_map * dir_map_ptr);
 static char parse_operand(char * operand_string, char ** label, int * const_number, int * register_number);
 static int parse_num(char * num_string, char ** endptr, long * num, long min, long max);
 
@@ -181,48 +182,69 @@ static void parse_operation_operands(assembler_ast * ast, char * operands_string
         aux1 - strchr(sep+1, ',');
         if(aux1){
             sprintf(ast->error_msg, "too many ','");
+            ast->line_type = syntax_error;
             return;
         }
         if(op_map_ptr->src_options == NULL){
             sprintf(ast->error_msg, "command '%s' does not support source operand", op_map_ptr->op_name);
+            ast->line_type = syntax_error;
             return;
         }
+        *sep = '\0';
         operand_type = parse_operand(operands_string, &ast->op_or_dir.op_line.op_content[0].label_name,&ast->op_or_dir.op_line.op_content[0].const_num,&ast->op_or_dir.op_line.op_content[0].reg_num);
         if(operand_type == 'N'){
             sprintf(ast->error_msg, "invalid operand '%s' for command '%s'", operands_string, op_map_ptr->op_name);
+            ast->line_type = syntax_error;
+            return;
+        }
+        if(operand_type == 'E'){
+            sprintf(ast->error_msg, "command '%s' requires source operand", op_map_ptr->op_name);
+            ast->line_type = syntax_error;
             return;
         }
         if(strchr(op_map_ptr->src_options, operand_type) == NULL){
             sprintf(ast->error_msg, "operand '%s' is not supported for command '%s'", operands_string, op_map_ptr->op_name);
+            ast->line_type = syntax_error;
             return;
         }
         operands_string = sep+1;
         operand_type = parse_operand(operands_string, &ast->op_or_dir.op_line.op_content[1].label_name,&ast->op_or_dir.op_line.op_content[1].const_num,&ast->op_or_dir.op_line.op_content[1].reg_num);
         if(operand_type == 'N'){
             sprintf(ast->error_msg, "invalid operand '%s' for command '%s'", operands_string, op_map_ptr->op_name);
+            ast->line_type = syntax_error;
+            return;
+        }
+        if(operand_type == 'E'){
+            sprintf(ast->error_msg, "command '%s' requires destination operand", op_map_ptr->op_name);
+            ast->line_type = syntax_error;
             return;
         }
         if(strchr(op_map_ptr->dst_options, operand_type) == NULL){
             sprintf(ast->error_msg, "operand '%s' is not supported for command '%s'", operands_string, op_map_ptr->op_name);
+            ast->line_type = syntax_error;
             return;
         }
 
     } else {
         if(op_map_ptr->src_options != NULL){
             sprintf(ast->error_msg, "command '%s' requires source operand", op_map_ptr->op_name);
+            ast->line_type = syntax_error;
             return;
         }
         operand_type = parse_operand(operands_string, &ast->op_or_dir.op_line.op_content[1].label_name,&ast->op_or_dir.op_line.op_content[1].const_num,&ast->op_or_dir.op_line.op_content[1].reg_num);
         if(operand_type != 'E' && op_map_ptr->dst_options == NULL){
             sprintf(ast->error_msg, "command '%s' does not support operands", op_map_ptr->op_name);
+            ast->line_type = syntax_error;
             return;
         }
         if(operand_type == 'E'){
             sprintf(ast->error_msg, "command '%s' expects one operand",op_map_ptr->op_name);
+            ast->line_type = syntax_error;
             return;
         }
         if(strchr(op_map_ptr->dst_options, operand_type) == NULL){
             sprintf(ast->error_msg, "operand '%s' is not supported for command '%s'", operands_string, op_map_ptr->op_name);
+            ast->line_type = syntax_error;
             return;
         }
     }
@@ -244,14 +266,41 @@ static char parse_operand(char * operand_string, char ** label, int * const_numb
             if(parse_num(operand_string+2, NULL, &num, MIN_REG, MAX_REG) != 0){
                 return 'N';
             }
-            *register_number = (int)num;
+            if(register_number){
+                *register_number = (int)num;
+            }
             return 'R';
         }
         return 'N';
     }
-    if(parse_num(operand_string, NULL, &num, MIN_CONST_NUM, MAX_CONST_NUM)){
-        
+    if(isalpha(*operand_string)){
+        temp = strpbrk(operand_string, SPACE_CHARS);
+        if(temp){
+            *temp = '\0';
+        }
+        temp++;
+        SKIP_SPACES(temp);
+        if(*temp != '\0'){
+            return 'N';
+        }
+        if(is_valid_label(operand_string) != label_ok){
+            return 'N';
+        }
+        if(label){
+            *label = operand_string;
+        }
+
+        return 'L';
     }
+    if(parse_num(operand_string, NULL, &num, MIN_CONST_NUM, MAX_CONST_NUM)){
+        return 'N';
+    } else {
+        if(const_number){
+            *const_number = (int)num;
+        }
+        return 'I';
+    }
+    return 'N';
 }
 
 static int parse_num(char * num_string, char ** endptr, long * num, long min, long max){
@@ -276,6 +325,31 @@ static int parse_num(char * num_string, char ** endptr, long * num, long min, lo
     return 0;
     
 }
+
+static void parse_directive(assembler_ast * ast, char * operands_string, struct dir_map * dir_map_ptr){
+    char * sep;
+    if(dir_map_ptr->key <= dir_entry){
+        if(parse_operand(operands_string, &ast->op_or_dir.dir_line.dir_content.label_name, NULL,NULL) != 'L'){
+            sprintf(ast->error_msg, "invalid label '%s' for directive '%s'", operands_string, dir_map_ptr->dir_name);
+            ast->line_type = syntax_error;
+            return;
+        }
+    }
+    if(dir_map_ptr->key == dir_data){
+        sep = strchr(operands_string, ',');
+        do{
+            if(sep){
+                *sep = '\0';
+            }
+        }while((sep = strchr(operands_string, ',')) != NULL);
+    }
+    if(dir_map_ptr->key == dir_string){
+    
+    }
+}
+
+
+
 
 
 
