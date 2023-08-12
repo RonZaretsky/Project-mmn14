@@ -1,26 +1,14 @@
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include "assembler.h"
 #include "../lexer/lexer.h"
 #include "../data_structures/vector/vector.h"
 #include "../data_structures/trie/trie.h"
-#include <stdio.h>
 #include "../global/defines.h"
-#include <string.h>
-#include <stdlib.h>
+#include "../global/typedefs.h"
 
-/* a symbol struct */
-typedef struct symbol{
-    enum{
-        symbol_extern,
-        symbol_entry,
-        symbol_code,
-        symbol_data,
-        symbol_entry_code,
-        symbol_entry_data
-    } type;
-    unsigned int address;
-    unsigned int declared_line;
-    char name[MAX_SYMBOL_LENGTH+1];
-} symbol;
+
 
 typedef struct missing_symbol{
     char name[MAX_SYMBOL_LENGTH];
@@ -29,14 +17,7 @@ typedef struct missing_symbol{
     unsigned int * address;
 } missing_symbol;
 
-/* an object file struct */
-typedef struct object_file{
-    Vector code_image;
-    Vector data_image;
-    Vector symbol_table;
-    Vector extern_symbols_table;
-    Trie symbols_names;
-} object_file;
+
 
 typedef struct extern_call{
     char extern_name[MAX_SYMBOL_LENGTH + 1];
@@ -68,9 +49,9 @@ int assemble(int file_count, char **file_names){
         am_file = fopen(am_file_name, "r");
         if(am_file_name && am_file){
             objfile = create_new_objfile();
-            /*if(compile(am_file, &objfile, am_file_name)){
+            if(compile(am_file, &objfile, am_file_name)){
 
-            }*/
+            }
             fclose(am_file);
             free((void *)am_file_name);
             destroy_objfile(&objfile);
@@ -285,8 +266,11 @@ static int compile(FILE * file, object_file * objfile, const char* file_name){
     
     VECTOR_FOR_EACH(begin,end,objfile->symbol_table){
         if(*begin){
-            if(((symbol*)(*begin))->type == symbol_entry || ((symbol*)(*begin))->type >= symbol_entry_code){
+            if(((symbol*)(*begin))->type == symbol_entry){
                 /* Error entry x was dec in line y but was never defined in am file*/
+            }
+            else if(((symbol*)(*begin))->type == symbol_entry){
+                objfile->entries_count++;
             }
         }
     }
@@ -370,7 +354,7 @@ static void add_extern(Vector extern_calls, const char * extern_name, const unsi
 }
 /*returns new objfile*/
 static object_file create_new_objfile(){
-    object_file objfile;
+    object_file objfile = {0};
     objfile.code_image = new_vector(ctor_mem_word, dtor_mem_word);
     objfile.data_image = new_vector(ctor_mem_word, dtor_mem_word);
     objfile.symbol_table = new_vector(ctor_symbol, dtor_symbol);

@@ -69,4 +69,7 @@ typedef struct assembler_ast{
 
 assembler_ast line_to_ast_lexer(char *line);
 
+
+static void lexer_trie_deinit();
+
 #endif /* __LEXER_H__ */

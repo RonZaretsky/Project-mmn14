@@ -61,7 +61,6 @@ typedef enum{
 
 
 static void lexer_trie_init();
-static void lexer_trie_deinit();
 static valid_label_err is_valid_label(const char *label);
 static void parse_operation_operands(assembler_ast * ast, char * operands_string, struct op_map * op_map_ptr);
 static void parse_directive(assembler_ast * ast, char * operands_string, struct dir_map * dir_map_ptr);
@@ -148,6 +147,15 @@ assembler_ast line_to_ast_lexer(char *line){
     
     return ast;
 }
+
+
+static void lexer_trie_deinit(){
+    is_trie_inited = 0;
+    trie_destroy(&op_lookup);
+    trie_destroy(&dir_lookup);
+}
+
+
 
 static void lexer_trie_init(){
     int i;
@@ -426,13 +434,6 @@ static void parse_directive(assembler_ast * ast, char * operands_string, struct 
         ast->op_or_dir.dir_line.dir_content.string = sep1;
     }
 }
-
-static void lexer_trie_deinit(){
-    is_trie_inited = 0;
-    trie_destroy(&op_lookup);
-    trie_destroy(&dir_lookup);
-}
-
 
 
 
