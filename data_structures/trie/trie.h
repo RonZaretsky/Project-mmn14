@@ -21,7 +21,7 @@ typedef struct trie * Trie;
  * 
  * @return Trie 
  */
-Trie trie();
+Trie trie(void);
 
 
 /**

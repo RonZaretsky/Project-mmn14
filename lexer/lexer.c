@@ -60,7 +60,7 @@ typedef enum{
 }valid_label_err;
 
 
-static void lexer_trie_init();
+static void lexer_trie_init(void);
 static valid_label_err is_valid_label(const char *label);
 static void parse_operation_operands(assembler_ast * ast, char * operands_string, struct op_map * op_map_ptr);
 static void parse_directive(assembler_ast * ast, char * operands_string, struct dir_map * dir_map_ptr);
@@ -149,7 +149,7 @@ assembler_ast line_to_ast_lexer(char *line){
 }
 
 
-static void lexer_trie_deinit(){
+static void lexer_trie_deinit(void){
     is_trie_inited = 0;
     trie_destroy(&op_lookup);
     trie_destroy(&dir_lookup);
@@ -157,7 +157,7 @@ static void lexer_trie_deinit(){
 
 
 
-static void lexer_trie_init(){
+static void lexer_trie_init(void){
     int i;
     op_lookup = trie();
     dir_lookup = trie();
@@ -362,7 +362,6 @@ static void parse_directive(assembler_ast * ast, char * operands_string, struct 
     char * sep1;
     char * sep2;
     int num_cnt = 0;
-    int sep_cnt = 0;
     int curr_num;
     if(dir_map_ptr->key <= dir_entry){
         if(parse_operand(operands_string, &ast->op_or_dir.dir_line.dir_content.label_name, NULL,NULL) != 'L'){
@@ -377,7 +376,6 @@ static void parse_directive(assembler_ast * ast, char * operands_string, struct 
             sep1 = strchr(operands_string, ',');
             if(sep1){
                 *sep1 = '\0';
-                sep_cnt++;
             }
             switch(parse_operand(operands_string,NULL, &curr_num, NULL)){
                 case 'I':

@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "assembler.h"
 #include "../lexer/lexer.h"
+#include "../preprocessor/preprocessor.h"
 #include "../data_structures/vector/vector.h"
 #include "../data_structures/trie/trie.h"
 #include "../global/defines.h"
@@ -35,7 +36,7 @@ static void extern_call_dtor(void * to_delete);
 static void * ctor_missing_symbol(const void * copy);
 static void dtor_missing_symbol(void * to_delete);
 static void add_extern(Vector extern_calls, const char * extern_name, const unsigned int address);
-static object_file create_new_objfile();
+static object_file create_new_objfile(void);
 static void destroy_objfile(object_file * objfile);
 
 /* Main function of assembler*/
@@ -280,11 +281,11 @@ static int compile(FILE * file, object_file * objfile, const char* file_name){
             exists_symbol = trie_exists(objfile->symbols_names, ((missing_symbol*)(*begin))->name);
             if(exists_symbol && exists_symbol->type != symbol_entry){
                 *(((missing_symbol*)(*begin))->address) = exists_symbol->address << 2;
-                if(exists_symbol->type = symbol_extern){
-                    *(((missing_symbol*)(*begin))->address) != 1;
+                if(exists_symbol->type == symbol_extern){
+                    *(((missing_symbol*)(*begin))->address) |= 1;
                     add_extern(objfile->extern_symbols_table,exists_symbol->name, ((missing_symbol*)(*begin))->call_address);
                 } else {
-                    *(((missing_symbol*)(*begin))->address) != 2;
+                    *(((missing_symbol*)(*begin))->address) |= 2;
                 }
             } else {
                 /* error missing label */
@@ -353,7 +354,7 @@ static void add_extern(Vector extern_calls, const char * extern_name, const unsi
     vector_insert(extern_calls, &e_call);
 }
 /*returns new objfile*/
-static object_file create_new_objfile(){
+static object_file create_new_objfile(void){
     object_file objfile = {0};
     objfile.code_image = new_vector(ctor_mem_word, dtor_mem_word);
     objfile.data_image = new_vector(ctor_mem_word, dtor_mem_word);

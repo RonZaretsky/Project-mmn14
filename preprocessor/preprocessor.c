@@ -136,6 +136,7 @@ const char * preprocesses_file(const char *file_name){
     vector_destroy(&am_file_lines);
     trie_destroy(&macro_names);
     fclose(as_file);
+    return NULL;
 }
 
 /* this method return the type of the line*/
@@ -165,7 +166,7 @@ static enum line_type get_line_type(const char * line, Trie * macro_names, Vecto
         SKIP_SPACES(line_ptr);
         /* error if extra characters after new macro call */
         if(*line_ptr != '\0') {
-            fprintf(stderr, "Error: extra characters after new macro call.\n", word);
+            fprintf(stderr, "Error: extra characters after new macro call '%s'.\n", word);
             return BAD_NEW_MACRO_CALL;
         }
         *macro = malloc(sizeof(Macro));

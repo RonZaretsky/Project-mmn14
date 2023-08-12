@@ -23,7 +23,7 @@ struct trie{
     struct trie_node *next[95];
 };
 
-Trie trie(){
+Trie trie(void){
     return calloc(1, sizeof(struct trie));
 }
 
