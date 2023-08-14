@@ -29,6 +29,10 @@ typedef struct object_file{
     int entries_count;
 } object_file;
 
+typedef struct extern_call{
+    char extern_name[MAX_SYMBOL_LENGTH + 1];
+    Vector call_address;
+} extern_call;
 
 
 

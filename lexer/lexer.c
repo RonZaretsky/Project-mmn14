@@ -148,8 +148,7 @@ assembler_ast line_to_ast_lexer(char *line){
     return ast;
 }
 
-
-static void lexer_trie_deinit(void){
+void lexer_trie_deinit(void){
     is_trie_inited = 0;
     trie_destroy(&op_lookup);
     trie_destroy(&dir_lookup);

@@ -17,7 +17,7 @@
  * @param file_name The name of the file to preprocess.
  * @return const char * - name of the new file.
  */
-const char * preprocesses_file(const char * file_name);
+const int preprocesses_file(const char * file_name);
 
 
 

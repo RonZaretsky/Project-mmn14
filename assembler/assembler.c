@@ -8,6 +8,7 @@
 #include "../data_structures/trie/trie.h"
 #include "../global/defines.h"
 #include "../global/typedefs.h"
+#include "../output/output.h"
 
 
 
@@ -20,10 +21,6 @@ typedef struct missing_symbol{
 
 
 
-typedef struct extern_call{
-    char extern_name[MAX_SYMBOL_LENGTH + 1];
-    Vector call_address;
-} extern_call;
 
 /* Signatures of methods */
 static int compile(FILE * file, object_file * objfile, const char* file_name);
@@ -42,21 +39,25 @@ static void destroy_objfile(object_file * objfile);
 /* Main function of assembler*/
 int assemble(int file_count, char **file_names){
     int i;
-    const char * am_file_name;
     FILE * am_file;
     object_file objfile;
+    char am_file_name[MAX_STRING_LENGTH+1] = {0};
     for(i = 0; i < file_count; i++){
-        am_file_name = preprocesses_file(file_names[i]);
-        am_file = fopen(am_file_name, "r");
-        if(am_file_name && am_file){
-            objfile = create_new_objfile();
-            if(compile(am_file, &objfile, am_file_name)){
-
+        if(preprocesses_file(file_names[i])){
+            strcpy(am_file_name,AM_FILES_PATH);
+            strcat(am_file_name,file_names[i]);
+            strcat(am_file_name,AM_FILE_EXTENSION);
+            am_file = fopen(am_file_name, "r");
+            if(am_file){
+                objfile = create_new_objfile();
+                if(compile(am_file, &objfile, am_file_name)){
+                    output(file_names[i], &objfile);
+                }
+                fclose(am_file);
+                destroy_objfile(&objfile);
             }
-            fclose(am_file);
-            free((void *)am_file_name);
-            destroy_objfile(&objfile);
         }
+        
     }
     return 0;
 }
@@ -77,7 +78,6 @@ static int compile(FILE * file, object_file * objfile, const char* file_name){
     symbol *exists_symbol;
     unsigned int extern_call_adress = 0;
     unsigned int machine_word = 0;
-    unsigned int * missing_machine_word;
     int i;
     unsigned int * just_inserted;
     const char * data_str;
@@ -263,6 +263,7 @@ static int compile(FILE * file, object_file * objfile, const char* file_name){
             }
         }
         line_cnt++;
+        lexer_trie_deinit();
     }
     
     VECTOR_FOR_EACH(begin,end,objfile->symbol_table){

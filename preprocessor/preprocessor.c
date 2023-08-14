@@ -38,16 +38,16 @@ static void load_am_file(FILE ** file, Vector * file_content);
 
 
 
-const char * preprocesses_file(const char *file_name){
+const int preprocesses_file(const char *file_name){
     char line[MAX_LINE_LENGTH+1] = {0};
     char * macro_name;
 
     char as_file_name[MAX_STRING_LENGTH+1] = {0};
     char am_file_name[MAX_STRING_LENGTH+1] = {0};
 
-    Vector am_file_lines;
-    Vector macro_table;
-    Trie macro_names;
+    Vector am_file_lines = NULL;
+    Vector macro_table = NULL;
+    Trie macro_names = NULL;
 
     FILE * as_file;
     FILE * am_file;
@@ -75,7 +75,7 @@ const char * preprocesses_file(const char *file_name){
     /* error if file does not exist */
     if(!as_file){
         printf("Error: file %s does not exist.\n", as_file_name);
-        return NULL;
+        return FAILURE;
     }
 
     macro_table = new_vector(macro_ctor, macro_dtor);
@@ -136,15 +136,16 @@ const char * preprocesses_file(const char *file_name){
     vector_destroy(&am_file_lines);
     trie_destroy(&macro_names);
     fclose(as_file);
-    return NULL;
+    return SUCCESS;
 }
 
 /* this method return the type of the line*/
 static enum line_type get_line_type(const char * line, Trie * macro_names, Vector * macro_table ,Macro ** macro){
+    char * line_ptr;
     char *word;
     char line_copy[MAX_LINE_LENGTH+1] = {0};
     strcpy(line_copy, line);
-    char * line_ptr = line_copy;
+    line_ptr = line_copy;
     word = strchr(line_ptr, ';');
     if(word) *word = '\0';
     SKIP_SPACES(line_ptr);
@@ -194,7 +195,7 @@ static enum line_type get_line_type(const char * line, Trie * macro_names, Vecto
 
 /* macro vector constructor */
 static void * macro_ctor(const void * copy){
-    Macro * macro = copy;
+    Macro * macro = (Macro*)copy;
     Macro * new_macro = malloc(sizeof(Macro));
     strcpy(new_macro->name, macro->name);
     new_macro->lines = new_vector(line_ctor, line_dtor);
