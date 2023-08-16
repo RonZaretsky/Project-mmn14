@@ -101,6 +101,7 @@ static int compile(FILE * file, object_file * objfile, const char* file_name){
                 if(exists_symbol){
                     if(exists_symbol->type != symbol_entry){
                         /* ERROR REDEF */
+                        has_error = TRUE;
                     }
                     else {
                         exists_symbol->type = symbol_entry_code;
@@ -116,24 +117,33 @@ static int compile(FILE * file, object_file * objfile, const char* file_name){
             } 
             /* if symbol is directive */
             else {
-                if(exists_symbol){
-                    if(ast.op_or_dir.dir_line.dir_type >= dir_string){
-                        if(exists_symbol->type != symbol_entry ){
-                            /* ERROR REDEF */
-                        }
-                        else {
-                            exists_symbol->type = symbol_entry_data;
+                if(ast.op_or_dir.dir_line.dir_type <= dir_entry){
+                    
+                } else {
+                    if(exists_symbol){
+                        if(ast.op_or_dir.dir_line.dir_type >= dir_string){
+                            if(exists_symbol->type != symbol_entry ){
+                                /* ERROR REDEF */
+                                has_error = TRUE;
+                            }
+                            else {
+                                exists_symbol->type = symbol_entry_data;
+                                exists_symbol->address = vector_get_items_count(objfile->data_image) + 100;
+                                exists_symbol->declared_line = line_cnt;
+                            }
                         }
                     }
-                }
-                else {
-                    if(ast.op_or_dir.dir_line.dir_type >= dir_string){
-                        current_symbol.type = symbol_entry_data;
-                        current_symbol.address = vector_get_items_count(objfile->data_image);
-                        current_symbol.declared_line = line_cnt;
-                        trie_insert(objfile->symbols_names, current_symbol.name, vector_insert(objfile->symbol_table, &current_symbol));
-                    }
+                    else {
+                        if(ast.op_or_dir.dir_line.dir_type >= dir_string){
+                            current_symbol.type = symbol_data;
+                            current_symbol.address = vector_get_items_count(objfile->data_image) + 100;
+                            current_symbol.declared_line = line_cnt;
+                            trie_insert(objfile->symbols_names, current_symbol.name, vector_insert(objfile->symbol_table, &current_symbol));
+                        }
 
+
+                    }
+                
                 }
 
             }
@@ -165,21 +175,26 @@ static int compile(FILE * file, object_file * objfile, const char* file_name){
                     if(ast.op_or_dir.dir_line.dir_type == dir_entry){
                         if(exists_symbol->type == symbol_entry || exists_symbol->type >= symbol_entry_code){
                             /* ERROR REDEF */
+                            has_error = TRUE;
                         }
                         else if(exists_symbol->type == symbol_extern){
                             /* ERROR dec as extern and now dec as entry */
+                            has_error = TRUE;
                         } else {
                             if(exists_symbol->type == symbol_code){
                                 exists_symbol->type = symbol_entry_code;
                             } else {
                                 exists_symbol->type = symbol_entry_data;
+
                             }
                         }
                     }else{
                         if(exists_symbol->type == symbol_extern){
                             /* ERROR REDEF */
+                            has_error = TRUE;
                         } else{
                             /* ERROR dec as !extern and now dec as extern */
+                            has_error = TRUE;
                         }
                     }
                 }else{
@@ -233,8 +248,8 @@ static int compile(FILE * file, object_file * objfile, const char* file_name){
                                         machine_word |= 1;
                                         extern_call_adress = vector_get_items_count(objfile->code_image) + 100;
                                         add_extern(objfile->extern_symbols_table, exists_symbol->name, extern_call_adress);
-                                        strcpy(m_symbol.name, exists_symbol->name);
-                                        vector_insert(e_call.call_address, &extern_call_adress);
+                                        /*strcpy(m_symbol.name, exists_symbol->name);
+                                        vector_insert(e_call.call_address, &extern_call_adress);*/
                                     } else {
                                         machine_word |= 2;
                                     }
@@ -270,8 +285,9 @@ static int compile(FILE * file, object_file * objfile, const char* file_name){
         if(*begin){
             if(((symbol*)(*begin))->type == symbol_entry){
                 /* Error entry x was dec in line y but was never defined in am file*/
+                has_error = TRUE;
             }
-            else if(((symbol*)(*begin))->type == symbol_entry){
+            else if(((symbol*)(*begin))->type == symbol_entry_code){
                 objfile->entries_count++;
             }
         }
@@ -290,13 +306,14 @@ static int compile(FILE * file, object_file * objfile, const char* file_name){
                 }
             } else {
                 /* error missing label */
+                has_error = TRUE;
             }
         }
     }
 
     vector_destroy(&missing_symbols_table);
     
-    return has_error;
+    return !has_error;
 }
 /* this is a constructor for machine word vectors*/
 static void * ctor_mem_word(const void * copy){

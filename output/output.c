@@ -39,7 +39,8 @@ static void handle_section_to_64bit(FILE* file, Vector section){
     int i;
     VECTOR_FOR_EACH(begin,end,section){
         if(*begin){
-            msb_lsb[0] = (*(unsigned int *)(* begin) & 0xFA) >> 6;
+            msb_lsb[0] = (*(unsigned int *)(*begin) >> 6) & 0x3F;
+            msb_lsb[1] = (*(unsigned int *)(*begin)) & 0x3F;
             for(i = 0; i < 2;i++){
                 if(msb_lsb[i] >= 0 && msb_lsb[i] <= 25){
                     fprintf(file, "%c", msb_lsb[i] + 'A');
@@ -53,7 +54,7 @@ static void handle_section_to_64bit(FILE* file, Vector section){
                     fprintf(file, "%c", '/');
                 }
             }
-            fprintf(file, "\n ");
+            fprintf(file, "\n");
         }
     }
 }
@@ -82,9 +83,9 @@ static void handle_ext_file(const char * file_name, Vector extern_symbols_table)
     if(ext_file){
         VECTOR_FOR_EACH(begin_ext,end_ext,extern_symbols_table){
             if(*begin_ext){
-                VECTOR_FOR_EACH(begin_addr,end_addr,((const extern_call*)(begin_ext))->call_address){
-                    if(begin_addr){
-                        fprintf(ext_file, "%s\t%u\n", ((const extern_call*)(begin_ext))->extern_name, *((const unsigned int*)(begin_addr)));
+                VECTOR_FOR_EACH(begin_addr,end_addr,((const extern_call*)(*begin_ext))->call_address){
+                    if(*begin_addr){
+                        fprintf(ext_file, "%s\t%u\n", ((const extern_call*)(*begin_ext))->extern_name, *((const unsigned int*)(*begin_addr)));
                     }
                 }
             }
@@ -101,7 +102,7 @@ static void handle_ent_file(const char * file_name, Vector symbol_table){
     if(ent_file){
         VECTOR_FOR_EACH(begin,end,symbol_table){
             if(*begin){
-                if(((symbol*)(*begin))->type == symbol_entry){
+                if(((symbol*)(*begin))->type >= symbol_entry_code){
                     fprintf(ent_file, "%s\t%u\n", ((symbol*)(*begin))->name, ((symbol*)(*begin))->address);
                 }
             }
