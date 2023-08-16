@@ -101,6 +101,7 @@ static int compile(FILE * file, object_file * objfile, const char* file_name){
                 if(exists_symbol){
                     if(exists_symbol->type != symbol_entry){
                         /* ERROR REDEF */
+                        printf(RED "Error: symbol redefenition" reset);
                         has_error = TRUE;
                     }
                     else {
@@ -124,6 +125,7 @@ static int compile(FILE * file, object_file * objfile, const char* file_name){
                         if(ast.op_or_dir.dir_line.dir_type >= dir_string){
                             if(exists_symbol->type != symbol_entry ){
                                 /* ERROR REDEF */
+                                printf(RED "Error: symbol redefenition" reset);
                                 has_error = TRUE;
                             }
                             else {
@@ -175,10 +177,12 @@ static int compile(FILE * file, object_file * objfile, const char* file_name){
                     if(ast.op_or_dir.dir_line.dir_type == dir_entry){
                         if(exists_symbol->type == symbol_entry || exists_symbol->type >= symbol_entry_code){
                             /* ERROR REDEF */
+                            printf(RED "Error: symbol redefenition" reset);
                             has_error = TRUE;
                         }
                         else if(exists_symbol->type == symbol_extern){
                             /* ERROR dec as extern and now dec as entry */
+                            printf(RED "Error: Declared as extern and now declared as entry" reset);
                             has_error = TRUE;
                         } else {
                             if(exists_symbol->type == symbol_code){
@@ -191,9 +195,11 @@ static int compile(FILE * file, object_file * objfile, const char* file_name){
                     }else{
                         if(exists_symbol->type == symbol_extern){
                             /* ERROR REDEF */
+                            printf(RED "Error: symbol redefenition" reset);
                             has_error = TRUE;
                         } else{
                             /* ERROR dec as !extern and now dec as extern */
+                            printf(RED "Error: not declared as extern and now declared as extern" reset);
                             has_error = TRUE;
                         }
                     }
@@ -285,6 +291,7 @@ static int compile(FILE * file, object_file * objfile, const char* file_name){
         if(*begin){
             if(((symbol*)(*begin))->type == symbol_entry){
                 /* Error entry x was dec in line y but was never defined in am file*/
+                printf(RED "Error: entry %s was decalred but was never defined" reset, ((symbol*)(*begin))->name);
                 has_error = TRUE;
             }
             else if(((symbol*)(*begin))->type == symbol_entry_code){
@@ -306,6 +313,7 @@ static int compile(FILE * file, object_file * objfile, const char* file_name){
                 }
             } else {
                 /* error missing label */
+                printf(RED "Error: missing label" reset);
                 has_error = TRUE;
             }
         }
