@@ -4,12 +4,19 @@
 #include <stdlib.h>
 #include <string.h>
 
+
+/* Methods prototye */
 static void handle_ent_file(const char * file_name, Vector symbol_table);
 static void handle_ext_file(const char * file_name, Vector extern_symbols_table);
 static void handle_ob_file(const char * file_name, const object_file *objfile);
 static void handle_section_to_64bit(FILE* file, Vector section);
 
-
+/**
+ * @brief This methods prints all outputs to files 
+ * 
+ * @param base_name - name of the file without extension
+ * @param objfile - objectfile of compilation
+ */
 void output(const char * base_name, const object_file *objfile){
     char ext_file_name[MAX_STRING_LENGTH+1] = {0};
     char ent_file_name[MAX_STRING_LENGTH+1] = {0};
@@ -32,6 +39,12 @@ void output(const char * base_name, const object_file *objfile){
     handle_ob_file(ob_file_name, objfile);
 }
 
+/**
+ * @brief This method handles the translation of section to 64 bits
+ * 
+ * @param file - the file you want to write to
+ * @param section - the section you want to translate to 64 bits
+ */
 static void handle_section_to_64bit(FILE* file, Vector section){
     void * const * begin;   
     void * const * end;
@@ -59,6 +72,12 @@ static void handle_section_to_64bit(FILE* file, Vector section){
     }
 }
 
+/**
+ * @brief This method handles the writing to ob file
+ * 
+ * @param file_name - name of file without extension
+ * @param objfile - objectfile of compilation
+ */
 static void handle_ob_file(const char * file_name, const object_file *objfile){
     FILE * ob_file;
     ob_file = fopen(file_name, "w");
@@ -73,7 +92,13 @@ static void handle_ob_file(const char * file_name, const object_file *objfile){
     }
 }
 
-static void handle_ext_file(const char * file_name, Vector extern_symbols_table){
+/**
+ * @brief This method handles the writing to ext file
+ * 
+ * @param file_name - name of file without extension
+ * @param extern_symbols_table - Vector of extern symbols
+ */
+static void handle_ext_file(const char * file_name,const Vector extern_symbols_table){
     FILE * ext_file;
     void * const * begin_ext;
     void * const * end_ext;
@@ -94,7 +119,13 @@ static void handle_ext_file(const char * file_name, Vector extern_symbols_table)
     }
 }
 
-static void handle_ent_file(const char * file_name, Vector symbol_table){
+/**
+ * @brief This method handles the writing to ent file
+ * 
+ * @param file_name - file name without extension
+ * @param symbol_table - Vector of symbols
+ */
+static void handle_ent_file(const char * file_name,const Vector symbol_table){
     FILE * ent_file;
     void * const * begin;
     void * const * end;
