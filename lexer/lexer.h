@@ -2,7 +2,10 @@
 #define __LEXER_H__
 #include "../global/defines.h"
 
-
+/**
+ * @brief an abstract syntax tree that describes every line of code
+ * 
+ */
 typedef struct assembler_ast{
     char error_msg[MAX_STRING_LENGTH];
     char label_name[MAX_SYMBOL_LENGTH];

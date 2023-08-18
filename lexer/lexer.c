@@ -14,6 +14,11 @@ static int is_trie_inited = FALSE;
 Trie op_lookup = NULL;
 Trie dir_lookup = NULL;
 
+
+/**
+ * @brief Map of operations and what opperand they can get 
+ * 
+ */
 static struct op_map{
     const char *op_name;
     int key;
@@ -40,7 +45,10 @@ static struct op_map{
     {"stop",op_stop, NULL, NULL},
 };
 
-
+/**
+ * @brief Map of directives 
+ * 
+ */
 static struct dir_map{
     const char *dir_name;
     int key;
@@ -67,6 +75,12 @@ static void parse_directive(assembler_ast * ast, char * operands_string, struct 
 static char parse_operand(char * operand_string, char ** label, int * const_number, int * register_number);
 static int parse_num(char * num_string, char ** endptr, long * num, long min, long max);
 
+/**
+ * @brief This method gets a line and parses it to ast, then returns in
+ * 
+ * @param line - the line you want to parse
+ * @return assembler_ast - the ast returned
+ */
 assembler_ast line_to_ast_lexer(char *line){
     assembler_ast ast ={0};
     valid_label_err label_status;
@@ -148,6 +162,11 @@ assembler_ast line_to_ast_lexer(char *line){
     return ast;
 }
 
+
+/**
+ * @brief This methos deinitializing the tries
+ * 
+ */
 void lexer_trie_deinit(void){
     is_trie_inited = 0;
     trie_destroy(&op_lookup);
@@ -155,7 +174,10 @@ void lexer_trie_deinit(void){
 }
 
 
-
+/**
+ * @brief This methos initializig the tries
+ * 
+ */
 static void lexer_trie_init(void){
     int i;
     op_lookup = trie();
@@ -169,6 +191,12 @@ static void lexer_trie_init(void){
     is_trie_inited = TRUE;
 }
 
+/**
+ * @brief This methos checks if a label is valid
+ * 
+ * @param label - char pointer to the label
+ * @return valid_label_err - returns enum with error (or no error)
+ */
 static valid_label_err is_valid_label(const char *label){
     int char_count = 0;
     if(!isalpha(*label)){
@@ -188,6 +216,13 @@ static valid_label_err is_valid_label(const char *label){
     return label_ok;
 }
 
+/**
+ * @brief This method parses operation operands
+ * 
+ * @param ast - pointer to ast
+ * @param operands_string - char pointer that containes the operands
+ * @param op_map_ptr - pointer to the operation
+ */
 static void parse_operation_operands(assembler_ast * ast, char * operands_string, struct op_map * op_map_ptr){
     char operand_type;
     char *aux1;
@@ -279,6 +314,15 @@ static void parse_operation_operands(assembler_ast * ast, char * operands_string
 
 }
 
+/**
+ * @brief This method parses every operand 
+ * 
+ * @param operand_string - char pointer that containes the operand
+ * @param label - char pointer to pointer to label if you want to fill label operand
+ * @param const_number - int pointer if you want to fill const number operand
+ * @param register_number - int pointer if you want to fill register number
+ * @return char - returns char depends on the result
+ */
 static char parse_operand(char * operand_string, char ** label, int * const_number, int * register_number){
     char *temp;
     long num;
@@ -334,6 +378,9 @@ static char parse_operand(char * operand_string, char ** label, int * const_numb
     return 'N';
 }
 
+/**
+ * @brief This method parses a num
+ */
 static int parse_num(char * num_string, char ** endptr, long * num, long min, long max){
     char * my_end;
     *num = strtol(num_string, &my_end, 10);
@@ -357,18 +404,28 @@ static int parse_num(char * num_string, char ** endptr, long * num, long min, lo
     
 }
 
+/**
+ * @brief This methods is parsing directive to ast
+ * 
+ * @param ast - pointer to ast 
+ * @param operands_string - the operands of the directive in a char pointer
+ * @param dir_map_ptr - pointer to directive in map
+ */
 static void parse_directive(assembler_ast * ast, char * operands_string, struct dir_map * dir_map_ptr){
     char * sep1;
     char * sep2;
     int num_cnt = 0;
     int curr_num;
+    /* check if entry or extern*/
     if(dir_map_ptr->key <= dir_entry){
+        /*check if operand invalid */
         if(parse_operand(operands_string, &ast->op_or_dir.dir_line.dir_content.label_name, NULL,NULL) != 'L'){
             sprintf(ast->error_msg, "invalid label '%s' for directive '%s'", operands_string, dir_map_ptr->dir_name);
             ast->line_type = syntax_error;
             return;
         }
     }
+    /*check if data*/
     else if(dir_map_ptr->key == dir_data){
         
         do{
@@ -376,6 +433,7 @@ static void parse_directive(assembler_ast * ast, char * operands_string, struct 
             if(sep1){
                 *sep1 = '\0';
             }
+            /* This switch check if every operand is invalid*/
             switch(parse_operand(operands_string,NULL, &curr_num, NULL)){
                 case 'I':
                     ast->op_or_dir.dir_line.dir_content.data.data[num_cnt] = curr_num;
@@ -406,7 +464,9 @@ static void parse_directive(assembler_ast * ast, char * operands_string, struct 
             
         }while(1);
     }
+    /*checks if string */
     else if(dir_map_ptr->key == dir_string){
+        /*The next code checks if the opernad is valid and in the end, if everything is ok it saves it*/
         sep1 = strchr(operands_string, '"');
         if(!sep1){
             sprintf(ast->error_msg, "directive : %s , error: missing '\"'", dir_map_ptr->dir_name);
