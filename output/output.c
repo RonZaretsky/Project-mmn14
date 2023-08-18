@@ -82,7 +82,7 @@ static void handle_ob_file(const char * file_name, const object_file *objfile){
     FILE * ob_file;
     ob_file = fopen(file_name, "w");
     if(ob_file){
-        fprintf(ob_file, "%lu %lu\n", vector_get_items_count(objfile->code_image), vector_get_items_count(objfile->data_image));
+        fprintf(ob_file, "%lu %lu\n", (unsigned long)vector_get_items_count(objfile->code_image), (unsigned long)vector_get_items_count(objfile->data_image));
         handle_section_to_64bit(ob_file, objfile->code_image);
         handle_section_to_64bit(ob_file, objfile->data_image);
 
