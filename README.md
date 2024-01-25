@@ -1,28 +1,58 @@
-# Assembler in c language - Final Project
+# Assembler in C Language - Final Project
 
-Dear Tester, 
+## Introduction
 
-Thank you for taking the time to review my work.
+Hello and welcome, esteemed Tester!
 
-I would like to explain how to use my Project.
+First and foremost, I extend my deepest gratitude for dedicating your time and effort to evaluate my final project. This README is intended to guide you through the process of using and testing my assembler project, developed in C.
 
-I worked on the makefile a lot of time so it would work perfect and easy.
+## Project Overview
 
-so at first, to compile the project you need to run the following in the terminal:
+The core of this project is an assembler developed in C language. The aim has been to create a robust, efficient, and user-friendly tool for assembly language programming.
+
+## Getting Started
+
+### Prerequisites
+
+Before you begin, ensure you have a working C compiler and the `make` utility installed on your system. These tools are necessary to compile and run the assembler.
+
+### Compilation
+
+I've invested considerable effort in crafting an effective `makefile` to streamline the compilation process. To compile the project, simply navigate to the project directory in your terminal and execute:
 
 ```bash
-  make
+make
 ```
 
-than, before running the program you need to add the test files.
+### Preparing Test Files
 
-so you go assets folder and inside of it go to as_files folder, there you put your test files.
+Before running the assembler, you'll need to add your test files. Here's how:
 
-the next step is to add the name of the files to the make makefile.
+1. Navigate to the `assets` folder.
+2. Inside the `assets` folder, locate the `as_files` directory.
+3. Place your test files (assembly code files) in the `as_files` directory.
 
-you open the make file and enter the name of the file without the extension in the "args" veriable, you can see there is also an exmaple with test1 test2
+### Configuring the Makefile
 
-than you run the following in the terminal 
+Next, you'll need to specify which files the assembler should process:
+
+1. Open the `makefile` in a text editor.
+2. Locate the `args` variable.
+3. Add the names of your test files (without their file extensions) to this variable.
+   - An example has been provided in the makefile (`test1`, `test2`, etc.).
+
+### Running the Assembler
+
+After setting up your test files and updating the makefile, you can run the assembler using:
+
 ```bash
-  make run
+make run
 ```
+
+## Feedback
+
+Your feedback is invaluable in improving this project. Please don't hesitate to share your thoughts, suggestions, or report any issues you encounter. Thank you once again for your involvement and assistance.
+
+---
+
+Wishing you a smooth and enjoyable testing experience!
