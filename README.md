@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Hello and welcome, esteemed Tester!
+Hello and welcome Tester!
 
 First and foremost, I extend my deepest gratitude for dedicating your time and effort to evaluate my final project. This README is intended to guide you through the process of using and testing my assembler project, developed in C.
 
